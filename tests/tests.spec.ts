@@ -1,217 +1,210 @@
 import { test, expect } from '@playwright/test';
 import { PageManager } from '../page-objects/pageManager'
+import * as users from "../data/credentials.json";
+import { sendRequest } from '../utils/requestUtils';
+import { requestOptions } from '../utils/requestOptions';
 
-// test.describe.configure({mode: 'parallel'})
+test.describe("Shopping Cart Feature. Empty shopping cart @cart", async () => {
 
-test.beforeEach(async({page}) => {
-    await page.goto('https://enotes.pointschool.ru/login')
-})
+    let pm: PageManager;
 
-test('1. Opening an empty shopping cart.', async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
+        pm = new PageManager(page);
+        await page.goto('https://enotes.pointschool.ru/login');
+        await pm.onSignInPage().signInToAccount(users.standard.login, users.standard.password)
+        expect(page.url()).toContain('https://enotes.pointschool.ru/')
 
-     const pm = new PageManager(page)
+        //очистку реализовать через вызов метода для кейса с 9 товарами
+        //await sendRequest(requestOptions);
 
-    // нажать на корзину
-        await pm.onMainPage().basketLinkClick()
-    // expect(). . .   // проверить, что открылось окно корзины
-    // нажать на кнопку Перейти в корзину 
-    // проверить, что открылась страница Корзины
+        //проверка на количество товаров в корзине. если не 0, то чистим корзину
+
+        const amountOfItems = pm.onMainPage().BASKET_AMOUNT_OF_ITEMS
+        await page.waitForSelector(amountOfItems)
+
+        const element = page.locator(amountOfItems).first()
+        const initialText = await element.textContent()
+
+        if (initialText != '0') {
+            await pm.onMainPage().basketLinkClick()
+            await pm.onMainPage().cleanTheBasket()
+        }
+    })
+
+
+    test('example', async ({ page }) => {
+
+       // Определение типа для продукта
+
 
     });
 
-test('2. Opening the shopping cart with 1 non-promotional item.', async ({ page }) => {
 
-    const pm = new PageManager(page)
+    test('1. Opening an empty shopping cart.', async ({ page }) => {
 
-    const userLogin = 'test'
-    const userPass = 'test'
-    
-    await pm.onSignInPage().signInToAccount(userLogin, userPass)
-    expect(page.url()).toContain('https://enotes.pointschool.ru/')
+        // нажать на корзину
+        await pm.onMainPage().basketLinkClick()
 
-    const basketContainer = page.locator('#basketContainer')
-    const selector = '#basketContainer .basket-count-items'
-    await page.waitForSelector(selector) //(basketContainer.locator('.basket-count-items'))
+        // проверить, что открылось окно корзины
+        expect(pm.onMainPage().basketDropDownMenu).toBeVisible //
 
-    const element = page.locator(selector).first()
+        // нажать на кнопку Перейти в корзину 
+        await pm.onMainPage().goToTheBasket()
 
-    const initialText = await element.textContent()
-    expect(initialText).toEqual('0')
+        // проверить, что открылась страница Корзины
+        expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
 
-    await pm.onMainPage().buyNonDiscountProduct()
+    });
 
-    // страница ожидает, пока обработается функция (5сек). проверяется, пока не вернет true. ждем изменения селектора
- 
+    test('2. Opening the shopping cart with 1 non-promotional item.', async ({ page }) => {
 
-    // Get the updated text content of the element
-    const updatedAmount = await pm.onMainPage().waitForAmountChanging(Number(initialText));
-    expect(updatedAmount).toEqual(1)
-
-    // нажать на корзину
-    await pm.onMainPage().basketLinkClick()
-
-    // expect(). . .   // проверить, что открылось окно корзины и содержимое
-    const dropdownMenuItemTitle = page.locator('.dropdown-menu').locator('.basket-item-title')
-    const dropdownMenuItemPrice = page.locator('.basket-item-price')
-    const dropdownMenuItemTotalPrice = page.locator('.basket_price')
-    await expect(dropdownMenuItemTitle).toHaveText('Блокнот в точку')
-    await expect(dropdownMenuItemPrice).toContainText('400 р.')
-    await expect(dropdownMenuItemTotalPrice).toHaveText('400')
-
-    //dropdownMenu.click()
-
-    // нажать на кнопку Перейти в корзину 
-    await pm.onMainPage().goToTheBasket()
-    // проверить, что открылась страница Корзины
-    //await pm.onMainPage().cleanTheBasket()
-
-});
-
-test('3. Opening the shopping cart with 1 promotional item.', async ({ page }) => {
-
-    const pm = new PageManager(page)
-
-    const userLogin = 'test'
-    const userPass = 'test'
-    await pm.onSignInPage().signInToAccount(userLogin, userPass)
-    expect(page.url()).toContain('https://enotes.pointschool.ru/')
-
-    const basketContainer = page.locator('#basketContainer')
-    const selector = '#basketContainer .basket-count-items'
-    await page.waitForSelector(selector) //(basketContainer.locator('.basket-count-items'))
-
-    const element = page.locator(selector).first()
-
-    const initialText = await element.textContent()
-    expect(initialText).toEqual('0')
-
-    await pm.onMainPage().buyDiscountProduct()
+        // вызвать функцию парсинга товаров на странице, 
+        // добавить в корзину первый товар, который isDiscounted: false
+        // если такого нет, то листаем страницу на след (предварительно получив их кол-во)
+        // если мы на последней странице и товар не найден, то тест скипается
+        // сравнить данные в корзине о товаре с теми, что мы распарсили до function compareData
 
 
-    // страница ожидает, пока обработается функция (5сек). проверяется, пока не вернет true. ждем изменения селектора
-    await page.waitForFunction(
-        (initialText) => {
-            const currentText = document.querySelector('#basketContainer .basket-count-items')?.textContent;
-            return currentText && currentText !== initialText;
-        },
-        initialText,
-        { timeout: 5000 }
-    );
+        //получить название и цену выбранного товара без скидки
+        const itemPriceLocator = await page.$(pm.onMainPage().NON_DISCOUNT_ITEM_PRICE);
+        const itemPrice = await itemPriceLocator?.innerText();
 
-    // Get the updated text content of the element
-    const updatedText = await page.textContent('#basketContainer .basket-count-items');
-    expect(updatedText).toEqual('1')
+        const itemNameLocator = await page.$(pm.onMainPage().NON_DISCOUNT_ITEM_NAME)
+        const itemName = await itemNameLocator?.innerText();
 
-    // нажать на корзину
-    await pm.onMainPage().basketLinkClick()
+        // Добавить в корзину данный товар без скидки
+        await pm.onMainPage().buyNonDiscountProduct()
 
-    // expect(). . .   // проверить, что открылось окно корзины и содержимое
-    // const dropdownMenuItemTitle = page.locator('.dropdown-menu').locator('.basket-item-title')
-    // const dropdownMenuItemPrice = page.locator('.basket-item-price')
-    // const dropdownMenuItemTotalPrice = page.locator('.basket_price')
-    // await expect(dropdownMenuItemTitle).toHaveText('Блокнот в точку')
-    // await expect(dropdownMenuItemPrice).toContainText('400 р.')
-    // await expect(dropdownMenuItemTotalPrice).toHaveText('400')
+        // Проверяем, что рядом с корзиной отображается цифра 1 (наш товар)
+        const newValueLocator = pm.onMainPage().BASKET_AMOUNT_OF_ITEMS
+        const updatedAmount = await pm.onMainPage().waitForAmountChanging(Number(page.locator(newValueLocator).first().textContent()));
+        expect(updatedAmount).toEqual(1)
 
+        // Нажать на иконку корзины
+        await pm.onMainPage().basketLinkClick()
 
-    //dropdownMenu.click()
+        // Открывается окно корзины, в котором указана цена, наименование товара, общая сумма
+        expect(pm.onMainPage().basketDropDownMenu).toBeVisible
 
-    // нажать на кнопку Перейти в корзину 
-    await pm.onMainPage().goToTheBasket()
+        await expect(pm.onMainPage().dropdownMenuItemTitle).toContainText(itemName!) //добавить проверку на undefined
+        await expect(pm.onMainPage().dropdownMenuItemPrice).toContainText(itemPrice!) //добавить проверку на undefined
+        await expect(pm.onMainPage().dropdownMenuItemTotalPrice).toBeVisible()
 
-    // проверить, что открылась страница Корзины
-    expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
-    //await pm.onMainPage().cleanTheBasket()
+        // В окне корзины нажать кнопку перейти в корзину
+        await pm.onMainPage().goToTheBasket()
 
-});
+        // 	Переход на страницу корзины
+        expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
+    });
 
-test('4. Opening the shopping cart with 9 different items.', async ({ page }) => {
-    const pm = new PageManager(page)
+    test('3. Opening the shopping cart with 1 promotional item.', async ({ page }) => {
 
-    const userLogin = 'test'
-    const userPass = 'test'
-    await pm.onSignInPage().signInToAccount(userLogin, userPass)
-    expect(page.url()).toContain('https://enotes.pointschool.ru/')
+        //получить название и цену выбранного товара со скидкой
+        const itemPriceLocator = await page.$(pm.onMainPage().DISCOUNT_ITEM_PRICE);
+        const itemPrice = await itemPriceLocator?.innerText();
 
-    const basketContainer = page.locator('#basketContainer')
-    const selector = '#basketContainer .basket-count-items'
-    await page.waitForSelector(selector) //(basketContainer.locator('.basket-count-items'))
+        const itemNameLocator = await page.$(pm.onMainPage().DISCOUNT_ITEM_NAME)
+        const itemName = await itemNameLocator?.innerText();
 
-    const element = page.locator(selector).first()
+        // Добавить в корзину данный товар со скидкой
+        await pm.onMainPage().buyDiscountProduct()
 
-    const initialText = await element.textContent()
-    expect(initialText).toEqual('0')
+        // нужна ли эта проверка??
+        // Проверяем, что рядом с корзиной отображается цифра 1 (наш товар)   
+        const newValueLocator = pm.onMainPage().BASKET_AMOUNT_OF_ITEMS
+        const updatedAmount = await pm.onMainPage().waitForAmountChanging(Number(page.locator(newValueLocator).first().textContent()));
+        expect(updatedAmount).toEqual(1)
 
-    await pm.onMainPage().buyDiscountProduct()
+        // Нажать на иконку корзины
+        await pm.onMainPage().basketLinkClick()
 
-    await page.waitForFunction(
-        (initialText) => {
-            const currentText = document.querySelector('#basketContainer .basket-count-items')?.textContent;
-            return currentText && currentText !== initialText;
-        },
-        initialText,
-        { timeout: 5000 }
-    );
+        // Открывается окно корзины, в котором указана цена, наименование товара, общая сумма
+        expect(pm.onMainPage().basketDropDownMenu).toBeVisible
 
-    const updatedText = await page.textContent('#basketContainer .basket-count-items');
-    expect(updatedText).toEqual('1')
+        //обрезать до 400
+        await expect(pm.onMainPage().dropdownMenuItemTitle).toContainText(itemName!) //добавить проверку на undefined
+        await expect(pm.onMainPage().dropdownMenuItemPrice).toContainText(itemPrice!) //добавить проверку на undefined
+        await expect(pm.onMainPage().dropdownMenuItemTotalPrice).toBeVisible()
 
-});
+        // В окне корзины нажать кнопку перейти в корзину
+        await pm.onMainPage().goToTheBasket()
 
-test('5. Opening the shopping cart with 9 identical promotional items.', async ({ page }) => {
-    const pm = new PageManager(page)
+        // 	Переход на страницу корзины
+        expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
 
-    const userLogin = 'test'
-    const userPass = 'test'
-    await pm.onSignInPage().signInToAccount(userLogin, userPass)
-    expect(page.url()).toContain('https://enotes.pointschool.ru/')
+    });
 
-    const basketContainer = page.locator('#basketContainer')
-    const selector = '#basketContainer .basket-count-items'
-    await page.waitForSelector(selector) //(basketContainer.locator('.basket-count-items'))
+    test('5. Opening the shopping cart with 9 identical promotional items.', async ({ page }) => {
 
-    const element = page.locator(selector).first()
+        // добавление в корзину 9 одинаковых товаров со скидкой
+        await pm.onMainPage().enterAmountOfDiscountItems(9)
+        await pm.onMainPage().buyDiscountProduct()
 
-    const initialText = await element.textContent()
-    expect(initialText).toEqual('0')
+        // Проверяем, что рядом с корзиной отображается цифра 9 (наши товары) 
+        const newValueLocator = pm.onMainPage().BASKET_AMOUNT_OF_ITEMS
+        const updatedAmount = await pm.onMainPage().waitForAmountChanging(Number(page.locator(newValueLocator).first().textContent()));
+        expect(updatedAmount).toEqual(9)
 
-    await pm.onMainPage().enterAmountOfDiscountItems(9)
+        // нажать на корзину
+        await pm.onMainPage().basketLinkClick()
 
-    await pm.onMainPage().buyDiscountProduct()
+        // проверить, что в корзине лежит 9 товаров и их название/цена/итоговая сумма
 
+        // нажать на кнопку Перейти в корзину (на данном шаге кейс упадет)
+        //await pm.onMainPage().goToTheBasket()
 
-    // страница ожидает, пока обработается функция (5сек). проверяется, пока не вернет true. ждем изменения селектора
-    await page.waitForFunction(
-        (initialText) => {
-            const currentText = document.querySelector('#basketContainer .basket-count-items')?.textContent;
-            return currentText && currentText !== initialText;
-        },
-        initialText,
-        { timeout: 5000 }
-    );
+        //проверить товары в корзине
 
-    // Get the updated text content of the element
-    const updatedText = await page.textContent('#basketContainer .basket-count-items');
-    expect(updatedText).toEqual('9')
+        // проверить, что открылась страница Корзины
+        expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
+    });
 
-    // нажать на корзину
-    await pm.onMainPage().basketLinkClick()
-
-    // expect(). . .   // проверить, что открылось окно корзины и содержимое
-    // const dropdownMenuItemTitle = page.locator('.dropdown-menu').locator('.basket-item-title')
-    // const dropdownMenuItemPrice = page.locator('.basket-item-price')
-    // const dropdownMenuItemTotalPrice = page.locator('.basket_price')
-    // await expect(dropdownMenuItemTitle).toHaveText('Блокнот в точку')
-    // await expect(dropdownMenuItemPrice).toContainText('400 р.')
-    // await expect(dropdownMenuItemTotalPrice).toHaveText('400')
+})
 
 
 
-    //dropdownMenu.click()
+test.describe("Shopping Cart Feature. The basket is not empty. @cart", async () => {
 
-    // нажать на кнопку Перейти в корзину 
-    await pm.onMainPage().goToTheBasket()
+    let pm: PageManager;
 
-    // проверить, что открылась страница Корзины
-    // expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
+    test.beforeEach(async ({ page }) => {
+        pm = new PageManager(page);
+        await page.goto('https://enotes.pointschool.ru/login');
+        await pm.onSignInPage().signInToAccount(users.standard.login, users.standard.password)
+        expect(page.url()).toContain('https://enotes.pointschool.ru/')
+        //await sendRequest(requestOptions);
+        //очистку реализовать через вызов метода для кейса с 9 товарами
+
+        //проверка на количество товаров в корзине. если не 0, то чистим корзину
+        const amountOfItems = pm.onMainPage().BASKET_AMOUNT_OF_ITEMS
+        await page.waitForSelector(amountOfItems)
+
+        const element = page.locator(amountOfItems).first()
+        const initialText = await element.textContent()
+
+        if (initialText != '0') {
+            await pm.onMainPage().basketLinkClick()
+            await pm.onMainPage().cleanTheBasket()
+        }
+    })
+
+    test('4. Opening the shopping cart with 9 different items.', async ({ page }) => {
+
+        // await pm.onMainPage().openNextPage()
+        // await page.waitForTimeout(1000);
+        // await pm.onMainPage().buyDiscountProduct()
+        // await page.goBack()
+        // await page.waitForTimeout(1000);
+
+        const noteItems = await page.$$('.note-list .col-3.mb-5 button.actionBuyProduct');
+        //const itemBuyButton = '.note-list .col-3.mb-5 button.actionBuyProduct'
+
+        //await page.waitForLoadState(itemBuyButton)
+        for (const noteItem of noteItems) {
+            await noteItem.click()
+            await page.waitForTimeout(1000); // Подождите некоторое время для обработки действия
+        }
+
+    });
+
 })

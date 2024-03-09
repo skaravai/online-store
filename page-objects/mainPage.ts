@@ -1,23 +1,19 @@
-import { Locator, Page, Selectors } from "@playwright/test";
-import { Product } from '../utils/productType';
-import { ElementHandle } from 'playwright';
+import { Locator, Page } from "@playwright/test";
 
 export class MainPage {
 
     readonly page: Page
-    readonly buyButton: Locator
-    readonly amountInput: Locator
-    readonly firstNonDiscountItem: Locator
-    readonly firstDiscountItem: Locator
-    readonly basketLink: Locator
+    readonly firstNonDiscountItem: Locator //delete
+    readonly firstDiscountItem: Locator //delete
+    readonly basketLink: Locator //надо ли удалять?
     readonly basketCount: Locator
-    readonly cleanTheBasketButton: Locator
-    readonly goToTheBasketButton: Locator
-    readonly amountInputDiscountItem: Locator
-    readonly basketDropDownMenu: Locator
-    readonly dropdownMenuItemTitle: Locator
-    readonly dropdownMenuItemPrice: Locator
-    readonly dropdownMenuItemTotalPrice: Locator
+    readonly cleanTheBasketButton: Locator 
+    readonly goToTheBasketButton: Locator 
+    readonly amountInputDiscountItem: Locator //delete
+    readonly basketDropDownMenu: Locator //
+    readonly dropdownMenuItemTitle: Locator //
+    readonly dropdownMenuItemPrice: Locator //
+    readonly dropdownMenuItemTotalPrice: Locator //
 
     readonly BASKET_AMOUNT_OF_ITEMS = '#basketContainer .basket-count-items' //2
     readonly basketAmountOfItems: Locator //1
@@ -31,10 +27,10 @@ export class MainPage {
 
     constructor(page: Page) {
         this.page = page
-        this.buyButton = page.locator('')
-        this.amountInput = page.locator('')
+
         this.firstDiscountItem = page.locator('.note-list .note-item.hasDiscount').locator('.actionBuyProduct').first()
         this.firstNonDiscountItem = page.locator('.note-list .note-item:not(.hasDiscount)').locator('.actionBuyProduct').first()
+
         this.basketLink = page.locator('#dropdownBasket')
         this.basketCount = page.locator('#basketContainer').locator('.basket-count-items').first()
         this.cleanTheBasketButton = page.locator('.btn-danger')
@@ -52,14 +48,17 @@ export class MainPage {
         await this.basketLink.click()
     }
 
+    //удалить
     async buyDiscountProduct() {
         await this.firstDiscountItem.click()
     }
+
 
     async enterAmountOfDiscountItems(amount: Number) {
         this.amountInputDiscountItem.fill(amount.toString())
     }
 
+    // удалить
     async buyNonDiscountProduct() {
         await this.firstNonDiscountItem.click()
     }
@@ -77,10 +76,10 @@ export class MainPage {
         await this.goToTheBasketButton.click()
     }
 
-    async addProductToBasket(product: Locator) {
-        await product.locator('.actionBuyProduct').first().click()
+    async addProductToBasket(product: ProductOLD) {
+        await product.locator!.locator('.actionBuyProduct').click()
     }
-
+  
     async waitForAmountChanging(initialAmount: Number): Promise<Number> {
 
         await this.page.waitForFunction(
@@ -111,27 +110,29 @@ export class MainPage {
         }
     }
 
-    readonly productsCollection: Product[] = [];
+    readonly productsCollection: ProductOLD[] = [];
 
-    async parseProductInfo(element: Locator): Promise<Product> {
+    async parseProductInfo(element: Locator): Promise<ProductOLD> {
         
-        const test = await element.locator('.product_price').locator('/text()')
+        const test = (await element.locator('.product_price').innerText()).match(/\d+/)
+        const finalPrice = test ? parseInt(test[0]) : NaN;
 
          return {
             name: await element.locator('.product_name')?.textContent(),
-            price: 1,
+            price: finalPrice,
             hasDiscount: await this.checkElementClass(element, 'hasDiscount'),
-            availableAmount: + (await element.locator('.product_count')?.textContent())!
-        } as Product;
+            availableAmount: + (await element.locator('.product_count')?.textContent())!,
+            locator: element
+        } as ProductOLD;
     
     }  
 
-    // Функция для сохранения Product в коллекцию
-    async saveProductToCollection(product: Product) {
+    async saveProductToCollection(product: ProductOLD) {
         this.productsCollection.push(product);
     }
 
     async checkElementClass(element: Locator, className: string): Promise<boolean> {
+        
         const classList = await element.getAttribute('class')
         
         return classList!.split(' ').includes(className);

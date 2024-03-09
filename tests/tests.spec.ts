@@ -3,6 +3,7 @@ import { PageManager } from '../page-objects/pageManager'
 import * as users from "../data/credentials.json";
 import { sendRequest } from '../utils/requestUtils';
 import { requestOptions } from '../utils/requestOptions';
+import {UI, Cart} from "../utils/productType";
 
 test.describe("Shopping Cart Feature. Empty shopping cart @cart", async () => {
 
@@ -35,7 +36,6 @@ test.describe("Shopping Cart Feature. Empty shopping cart @cart", async () => {
     test('example', async ({ page }) => {
 
        // Определение типа для продукта
-
 
     });
 
@@ -189,6 +189,16 @@ test.describe("Shopping Cart Feature. The basket is not empty. @cart", async () 
     })
 
     test('4. Opening the shopping cart with 9 different items.', async ({ page }) => {
+        const cart = new Cart()
+        const basket = new UI(page)
+
+
+        //
+        cart.items.forEach(function (item) {
+            basket.hasProduct(item.product, item.count)
+        })
+
+
 
         // await pm.onMainPage().openNextPage()
         // await page.waitForTimeout(1000);

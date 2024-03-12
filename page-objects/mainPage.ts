@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
 import { Product } from "../utils/productType";
 import selectors from '../utils/selectors.json'
 
@@ -6,28 +6,12 @@ export class MainPage {
 
     readonly page: Page
 
-    readonly firstNonDiscountItem: Locator //delete
-    readonly firstDiscountItem: Locator //deleteк
-    readonly cleanTheBasketButton: Locator
-    readonly basketDropDownMenu: Locator //
-    readonly BASKET_AMOUNT_OF_ITEMS = '#basketContainer .basket-count-items' //2
-    readonly basketAmountOfItems: Locator //1
-
     constructor(page: Page) {
         this.page = page
-        this.firstDiscountItem = page.locator('.note-list .note-item.hasDiscount').locator('.actionBuyProduct').first()
-        this.firstNonDiscountItem = page.locator('.note-list .note-item:not(.hasDiscount)').first()
-        this.cleanTheBasketButton = page.locator('.btn-danger')
-        this.basketAmountOfItems = page.locator('#basketContainer .basket-count-items')
-        this.basketDropDownMenu = page.locator('.dropdown-menu.show')
     }
 
     async basketIconClick() {
         await this.page.locator((selectors.mainPage.dropdownBasket)).click()
-    }
-
-    async clickTest() {
-        await this.page.locator(selectors.mainPage.dropdownBasket).click()
     }
 
     async cleanTheBasket() {
@@ -51,7 +35,6 @@ export class MainPage {
 
     async getBasketAmount(): Promise<Number> {
         const amount = await this.page.textContent(selectors.mainPage.basketItemsAmount)
-
         return Number(amount)
     }
 
@@ -62,8 +45,7 @@ export class MainPage {
 
     async hasProduct(product:Product, count: number): Promise<boolean> {
         // 1. Открываем корзину
-
-        // 2. По xpath проверяем
+        // 2. По xpath проверяем содержимое
         this.page.locator('xpath://span[@class=\'basket-item-title\' and text() = "' + product.name + '"]/following-sibling::span[@class="basket-item-price" and contains(text(), \'' + product.price+ '\')]/following-sibling::span[contains(@class, \'basket-item-count\') and text() = ' + count + ']')
 
         return false

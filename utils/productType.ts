@@ -82,7 +82,6 @@ export class UI {
 
     async hasProduct(product:Product, count: number): Promise<boolean> {
         // 1. Открываем корзину
-
         // 2. По xpath проверяем
         this.page.locator('xpath://span[@class=\'basket-item-title\' and text() = "' + product.name + '"]/following-sibling::span[@class="basket-item-price" and contains(text(), \'' + product.price+ '\')]/following-sibling::span[contains(@class, \'basket-item-count\') and text() = ' + count + ']')
 

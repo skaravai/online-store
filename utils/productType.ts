@@ -1,7 +1,8 @@
 import { Locator } from "@playwright/test";
 import {Page} from "playwright";
 
-class Product {
+
+export class Product {
     constructor(
         readonly locator: Locator,
         readonly name: string,
@@ -12,7 +13,7 @@ class Product {
 }
 
 // todo move to page manager 
-class ProductFactory {
+export class ProductFactory {
     async create(locator: Locator): Promise<Product> {
         return new Product(
             locator,
@@ -43,9 +44,21 @@ export class Cart {
     readonly items: CartItem[]
     private totalPrice: number = 0
 
-    add(product: Product, count: number) {
-        this.items.push(new CartItem(product, count))
+    constructor() {
+        this.items = []
+    }
+
+    add(product: Product, count: number = 1): CartItem {
+        let item = new CartItem(product, count)
+
+        this.items.push(item)
         this.totalPrice += product.price * count
+
+        return item
+    }
+
+    containsProduct(product: Product): boolean {
+        return this.items.findIndex(x => x.product.name === product.name) >= 0
     }
 
     getTotalPrice(): number {
@@ -58,18 +71,17 @@ class CartItem {
     }
 }
 
-
 // todo move to page manager mainPage.ts !
 export class UI {
     constructor(readonly page: Page) {
     }
-    async buyProduct(product: Product, count: number = 1) {
+    async buyProduct(product: Product, count: number = 1)  {
         await product.locator.locator('input[name="product-enter-count"]').fill(count.toString())
         await product.locator.locator('.actionBuyProduct').click()
     }
 
     async hasProduct(product:Product, count: number): Promise<boolean> {
-        // 1. Отрываем корзину
+        // 1. Открываем корзину
 
         // 2. По xpath проверяем
         this.page.locator('xpath://span[@class=\'basket-item-title\' and text() = "' + product.name + '"]/following-sibling::span[@class="basket-item-price" and contains(text(), \'' + product.price+ '\')]/following-sibling::span[contains(@class, \'basket-item-count\') and text() = ' + count + ']')

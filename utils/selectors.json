@@ -1,0 +1,19 @@
+{
+  "mainPage": {
+    "dropdownBasket": "#dropdownBasket",
+    "goToTheBasketButton": "a[href=\"/basket\"]",
+    "cleanTheBasketButton": ".btn-danger",
+    "basketItemsAmount": "#basketContainer .basket-count-items",
+    "nonDiscountItem": ".note-list .note-item:not(.hasDiscount)",
+    "discountItem": ".note-list .note-item.hasDiscount",
+    "productCard": {
+      "amountInput": "input[name=\"product-enter-count\"]",
+      "buyButton": ".actionBuyProduct"
+    }
+  },
+  "SignInPage": {
+
+  },
+  "CartPage": {
+  }
+}

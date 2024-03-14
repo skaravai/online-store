@@ -1,0 +1,21 @@
+{
+  "mainPage": {
+    "showOnlyWithDiscountCheckbox": "#gridCheck",
+    "nonDiscountItem": ".note-list .note-item:not(.hasDiscount)",
+    "discountItem": ".note-list .note-item.hasDiscount",
+    "basketDropDownMenu": "[aria-labelledby=\"dropdownBasket\"]",
+    "productCard": {
+      "amountInput": "input[name=\"product-enter-count\"]",
+      "buyButton": ".actionBuyProduct"
+    }
+  },
+  "signInPage": {
+
+  },
+  "basketPopupComponent": {
+    "basketItemsAmount": "#basketContainer .basket-count-items",
+    "dropdownBasket": "#dropdownBasket",
+    "goToTheBasketButton": "a[href=\"/basket\"]",
+    "cleanTheBasketButton": ".btn-danger"
+  }
+}

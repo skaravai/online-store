@@ -17,7 +17,8 @@ export class MainPage {
 
     async showOnlyWithDiscountClick() {
         await this.page.locator(selectors.mainPage.showOnlyWithDiscountCheckbox).click()
-        await this.page.waitForTimeout(5000) // wait for render after ajax call
+        await this.page.waitForResponse("https://enotes.pointschool.ru/basket/get")
+        //await this.page.waitForTimeout(5000) // wait for render after ajax call
     }
 
     async addFirstProduct(amount: number = 1): Promise<Product>  {

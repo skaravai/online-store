@@ -1,6 +1,6 @@
-import {Locator, Page} from "@playwright/test";
+import { Page } from "@playwright/test";
 import selectors from "../../utils/selectors.json";
-import {Product} from "../../../domain/entity/product";
+import { Product } from "../../../domain/entity/product";
 
 export class BasketPopupComponent {
 
@@ -16,7 +16,6 @@ export class BasketPopupComponent {
         }
 
         await this.openBasketPopup()
-
         await this.page.locator(selectors.basketPopupComponent.cleanTheBasketButton).click()
     }
 
@@ -43,6 +42,7 @@ export class BasketPopupComponent {
 
     async getItemsAmount(): Promise<Number> {
         const amount = await this.page.textContent(selectors.basketPopupComponent.basketItemsAmount)
+
         return Number(amount)
     }
 

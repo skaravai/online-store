@@ -1,13 +1,13 @@
 import { test, expect } from '../fixtures/my-test';
 import * as users from "../data/credentials.json";
-import {Product} from "../domain/entity/product"
+import { Product } from "../domain/entity/product"
 import selectors from '../page-objects/utils/selectors.json'
 
 
 test.describe("Shopping Cart Feature. @cart", async () => {
     test.beforeEach(async ({ page, signInPage, basketPopupComponent }) => {
 
-        await page.goto('https://enotes.pointschool.ru/login'); //move to baseURL
+        await page.goto('/login'); //move to baseURL
         await expect(page).toHaveURL('https://enotes.pointschool.ru/login')
         await signInPage.signInToAccount(users.standard.login, users.standard.password)
         await expect(page).toHaveURL('https://enotes.pointschool.ru/')
@@ -18,11 +18,9 @@ test.describe("Shopping Cart Feature. @cart", async () => {
     test('1. Opening an empty shopping cart.', async ({ page, mainPage, basketPopupComponent  }) => {
         await basketPopupComponent.openBasketPopup()
         await expect(page.locator('[aria-labelledby="dropdownBasket"].show')).toBeVisible()
-        // await expect(page.locator(selectors.mainPage.basketDropDownMenu)).toBeVisible()
 
         await basketPopupComponent.openBasketPage()
         expect(page.url()).toContain('https://enotes.pointschool.ru/basket')
-
     });
 
     test('2. Opening the shopping cart with 1 non-promotional item.', async ({ page, mainPage, basketPopupComponent }) => {
@@ -36,11 +34,9 @@ test.describe("Shopping Cart Feature. @cart", async () => {
         expect(product).not.toBeNull()
 
         await page.waitForTimeout(2000) // ждем пока отработает добавление товара в корзину и обновится счетчик в корзине
-
         expect(await basketPopupComponent.getItemsAmount()).toEqual(1)
 
         await basketPopupComponent.openBasketPopup()
-
         await expect(page.locator(selectors.mainPage.basketDropDownMenu)).toBeVisible()
 
         for (let item of mainPage.cart.items) {
@@ -53,22 +49,20 @@ test.describe("Shopping Cart Feature. @cart", async () => {
         expect(await basketPopupComponent.getTotalPrice()).toEqual(mainPage.cart.getTotalPrice())
 
         await basketPopupComponent.openBasketPage()
-
         await expect(page).toHaveURL('https://enotes.pointschool.ru/basket')
     });
 
     test('3. Opening the shopping cart with 1 promotional item.', async ({ page, mainPage, basketPopupComponent  }) => {
         await mainPage.showOnlyWithDiscountClick()
         const product = await mainPage.addFirstProduct()
-
         expect(product).not.toBeNull()
 
-        await page.waitForTimeout(2000) // ждем пока отработает добавление товара в корзину и обновится счетчик в корзине
-
+        //await page.waitForTimeout(2000)
+        // ждем пока отработает добавление товара в корзину и обновится счетчик в корзине
+        await page.waitForResponse("https://enotes.pointschool.ru/basket/get")
         expect(await basketPopupComponent.getItemsAmount()).toEqual(1)
 
         await basketPopupComponent.openBasketPopup()
-
         await expect(page.locator(selectors.mainPage.basketDropDownMenu)).toBeVisible()
 
         for (let item of mainPage.cart.items) {
@@ -81,7 +75,6 @@ test.describe("Shopping Cart Feature. @cart", async () => {
         expect(await basketPopupComponent.getTotalPrice()).toEqual(mainPage.cart.getTotalPrice())
 
         await basketPopupComponent.openBasketPage()
-
         await expect(page).toHaveURL('https://enotes.pointschool.ru/basket')
     });
 
@@ -128,15 +121,12 @@ test.describe("Shopping Cart Feature. @cart", async () => {
 
         await mainPage.showOnlyWithDiscountClick()
         const product = await mainPage.addFirstProduct(9)
-
         expect(product).not.toBeNull()
 
         await page.waitForTimeout(2000) // ждем пока отработает добавление товара в корзину и обновится счетчик в корзине
-
         expect(await basketPopupComponent.getItemsAmount()).toEqual(9)
 
         await basketPopupComponent.openBasketPopup()
-
         await expect(page.locator(selectors.mainPage.basketDropDownMenu)).toBeVisible()
 
         for (let item of mainPage.cart.items) {
@@ -149,9 +139,7 @@ test.describe("Shopping Cart Feature. @cart", async () => {
         expect(await basketPopupComponent.getTotalPrice()).toEqual(mainPage.cart.getTotalPrice())
 
         await basketPopupComponent.openBasketPage()
-
         await expect(page).toHaveURL('https://enotes.pointschool.ru/basket')
-
     });
 })
 

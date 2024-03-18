@@ -1,5 +1,5 @@
-import {Locator} from "@playwright/test";
-import {Product} from "../../domain/entity/product";
+import { Locator } from "@playwright/test";
+import { Product } from "../../domain/entity/product";
 
 export class ProductFactory {
     async create(locator: Locator): Promise<Product> {
